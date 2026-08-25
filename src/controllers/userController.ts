@@ -1,5 +1,9 @@
 import { Request, Response } from "express";
 import User from "../models/User";
+import Event from "../models/Event";
+import Favorite from "../models/Favorite";
+import Notification from "../models/Notification";
+import Registration from "../models/Registration";
 import ApiError from "../utils/ApiError";
 import asyncHandler from "../utils/asyncHandler";
 export { getMyRegistrations } from "./registrationController";
@@ -76,10 +80,29 @@ export const deleteUser = asyncHandler(async (req: Request, res: Response) => {
     throw new ApiError(400, "no puedes eliminar tu propia cuenta de administrador");
   }
 
-  const user = await User.findByIdAndDelete(req.params.id);
+  const user = await User.findById(req.params.id);
   if (!user) {
     throw new ApiError(404, "el usuario no existe");
   }
+
+  const organizedEvents = await Event.find({ organizador: user._id }).select("_id");
+  const organizedEventIds = organizedEvents.map((event) => event._id);
+
+  await Promise.all([
+    Registration.deleteMany({ usuario: user._id }),
+    Favorite.deleteMany({ usuario: user._id }),
+    Notification.deleteMany({ usuario: user._id }),
+    ...(organizedEventIds.length
+      ? [
+          Registration.deleteMany({ evento: { $in: organizedEventIds } }),
+          Favorite.deleteMany({ evento: { $in: organizedEventIds } }),
+          Notification.deleteMany({ evento: { $in: organizedEventIds } }),
+          Event.deleteMany({ _id: { $in: organizedEventIds } })
+        ]
+      : [])
+  ]);
+
+  await User.findByIdAndDelete(user._id);
 
   res.status(200).json({ success: true, message: "usuario eliminado correctamente" });
 });
