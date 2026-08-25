@@ -4,12 +4,16 @@ import ApiError from "../utils/ApiError";
 import asyncHandler from "../utils/asyncHandler";
 
 export const getEvents = asyncHandler(async (req: Request, res: Response) => {
-  const { search, category, location, date, upcoming, available, organizer } = req.query;
-  const filter: any = { estado: "activo" };
+  const { search, category, location, date, upcoming, available, organizer, all, status } = req.query;
+  const filter: any = {};
+
+  if (all !== "true") {
+    filter.estado = status ? String(status) : "activo";
+  }
 
   if (search) {
-    const searchRegex = new RegExp(String(search).trim(), "i"); // hacer busquedas parciales y i para case-insensitive
-    filter.$or = [{ titulo: searchRegex }, { descripcion: searchRegex }]; // buscar el texto si aparace en el titulo o si aparece en la descripcion 
+    const searchRegex = new RegExp(String(search).trim(), "i");
+    filter.$or = [{ titulo: searchRegex }, { descripcion: searchRegex }];
   }
 
   if (category) filter.categoria = category;
@@ -17,13 +21,15 @@ export const getEvents = asyncHandler(async (req: Request, res: Response) => {
   if (location) filter.ubicacion = new RegExp(String(location).trim(), "i");
 
   if (date) {
-    const start = new Date(String(date));
-    start.setHours(0, 0, 0, 0);
-    const end = new Date(String(date)); 
-    end.setHours(23, 59, 59, 999);
-    filter.fecha = { $gte: start, $lte: end }; // filtramos que sea mayor o igual que la fecha de inicio y menor o igual que la fecha final
+    const [year, month, day] = String(date).split("T")[0].split("-").map(Number);
+    if (year && month && day) {
+      filter.fecha = {
+        $gte: new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0)),
+        $lte: new Date(Date.UTC(year, month - 1, day, 23, 59, 59, 999))
+      };
+    }
   } else if (upcoming === "true") {
-    filter.fecha = { $gte: new Date(new Date().setHours(0, 0, 0, 0)) };
+    filter.fecha = { $gte: new Date(new Date().setUTCHours(0, 0, 0, 0)) };
   }
 
   let events = await Event.find(filter)

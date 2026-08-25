@@ -8,7 +8,7 @@ import Category from "../models/Category";
 import asyncHandler from "../utils/asyncHandler";
 
 const getUserDashboard = async (userId: any) => {
-  const today = new Date(new Date().setHours(0, 0, 0, 0));
+  const today = new Date(new Date().setUTCHours(0, 0, 0, 0));
 
   const [registrations, favoritesCount, unreadNotifications] = await Promise.all([
     Registration.find({ usuario: userId, estado: "activa" })
@@ -40,7 +40,7 @@ const getUserDashboard = async (userId: any) => {
 };
 
 const getOrganizerDashboard = async (organizerId: any) => {
-  const today = new Date(new Date().setHours(0, 0, 0, 0));
+  const today = new Date(new Date().setUTCHours(0, 0, 0, 0));
 
   const events = await Event.find({ organizador: organizerId })
     .populate("categoria", "nombre color")

@@ -45,7 +45,7 @@ const eventSchema = new Schema<IEventDocument>(
       type: Date,
       required: [true, "la fecha es requerida"],
       validate: {
-        validator: (value: Date) => value >= new Date(new Date().setHours(0, 0, 0, 0)),
+        validator: (value: Date) => value >= new Date(new Date().setUTCHours(0, 0, 0, 0)),
         message: "no se permiten fechas pasadas"
       }
     },
@@ -103,8 +103,8 @@ eventSchema.virtual("participantes", {
 });
 
 eventSchema.virtual("espaciosDisponibles").get(function (this: IEventDocument) {
-  if (this.participantes === undefined) return undefined;
-  return this.capacidadMaxima - this.participantes;
+  const participantes = this.participantes ?? 0;
+  return Math.max(0, this.capacidadMaxima - participantes);
 });
 
 export const Event: Model<IEventDocument> = mongoose.model<IEventDocument>("Event", eventSchema);

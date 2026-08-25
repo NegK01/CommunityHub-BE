@@ -17,8 +17,7 @@ export const registerToEvent = asyncHandler(async (req: Request, res: Response) 
     throw new ApiError(400, "el evento no esta disponible para inscripciones");
   }
 
-  const today = new Date(new Date().setHours(0, 0, 0, 0));
-  if (event.fecha < today) {
+  if (event.fecha < new Date(new Date().setUTCHours(0, 0, 0, 0))) {
     throw new ApiError(400, "no puedes inscribirte a un evento que ya paso");
   }
 
@@ -78,10 +77,13 @@ export const cancelRegistration = asyncHandler(async (req: Request, res: Respons
 });
 
 export const getMyRegistrations = asyncHandler(async (req: Request, res: Response) => {
-  const registrations = await Registration.find({
-    usuario: req.user!._id,
-    estado: "activa"
-  })
+  const filter: any = { usuario: req.user!._id };
+
+  if (req.query.all !== "true") {
+    filter.estado = "activa";
+  }
+
+  const registrations = await Registration.find(filter)
     .populate({
       path: "evento",
       populate: [

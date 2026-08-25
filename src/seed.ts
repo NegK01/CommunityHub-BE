@@ -46,7 +46,7 @@ const seedDatabase = async () => {
         rol: "organizer"
       }),
       User.create({
-        nombre: "Maria",
+        nombre: "Enoc",
         apellido: "Usuario",
         email: "user@communityhub.com",
         password: "password123",
@@ -101,7 +101,7 @@ const seedDatabase = async () => {
         estado: "activo"
       }),
       Event.create({
-        titulo: "Torneo Comunitario de Futbol",
+        titulo: "Torneo de futbol",
         descripcion: "Torneo de futbol 7 para la comunidad",
         categoria: sports._id,
         fecha: inThreeDays,
@@ -112,7 +112,7 @@ const seedDatabase = async () => {
         estado: "activo"
       }),
       Event.create({
-        titulo: "Charla: Software Libre",
+        titulo: "Charla de software libre",
         descripcion: "Exploracion de herramientas open source, licencias y desarrollo colaborativo",
         categoria: edu._id,
         fecha: inSevenDays,
